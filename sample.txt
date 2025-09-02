@@ -1,4 +1,0 @@
-Hi this is Prateek
-
-<role rolename="admin-gui,manager-gui ,manager-script,manager-jmx,manager-status"/>
-  <user username="admin" password="1234" roles="manager-gui, admin-gui ,manager-script"/>
