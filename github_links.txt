@@ -1,0 +1,7 @@
+for MavenJava use these github links:
+
+https://github.com/kprathyusha2000/mavenj
+
+https://github.com/Maanvith294/javamaven
+
+https://github.com/manisai28/se-lab
