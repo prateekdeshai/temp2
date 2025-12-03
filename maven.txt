@@ -1,3 +1,7 @@
+Maven Java automation: https://github.com/sabavathsriram/foodOrdering.git
+Maven Java automation: https://github.com/manisai28/maven_java
+Maven Web Automation: https://github.com/manisai28/maven_web_app
+
 CREATION OF MAVEN JAVA PROJECT
 
 Step 1. Open Eclipse IDE
