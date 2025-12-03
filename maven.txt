@@ -1,6 +1,7 @@
 Maven Java automation: https://github.com/sabavathsriram/foodOrdering.git
 Maven Java automation: https://github.com/manisai28/maven_java
 Maven Web Automation: https://github.com/manisai28/maven_web_app
+https://github.com/kprathyusha2000/mavenj
 
 CREATION OF MAVEN JAVA PROJECT
 
